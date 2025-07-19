@@ -1,1 +1,7 @@
 @import "tailwindcss";
+
+@layer utilities {
+  .font-baumans {
+    font-family: 'Baumans', cursive;
+  }
+}

@@ -29,9 +29,9 @@ export default function Login() {
 
   return (
     <div className="flex h-screen">
-      {/* Esquerda com cor roxa clara */}
-      <div className="w-1/2 bg-purple-200" />
-
+      <div className="w-1/2 bg-purple-200"> 
+        <h2 className="text-6xl font-black antialiased text-center text-purple-600 py-90 px-50 break-normal"> GERENCIAMENTO E CADASTRO DE EMPRESAS</h2>
+      </div>
       {/* Direita com formulário em fundo branco */}
       <div className="w-1/2 flex items-center justify-center bg-white">
         <div className="w-full max-w-md p-8 rounded-2xl shadow-lg bg-white">

@@ -29,13 +29,17 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow">
-        <h2 className="text-2xl font-bold mb-6 text-center">Registrar</h2>
+    <div className="flex h-screen">
+      <div className="w-1/2 bg-purple-200">
+      <h2 className="text-6xl font-black antialiased text-center text-purple-600 py-90 px-50 break-normal"> GERENCIAMENTO E CADASTRO DE EMPRESAS</h2>
+      </div>
+      <div className="w-1/2 flex items-center justify-center bg-white">
+        <div className="w-full max-w-md p-8 rounded-2xl shadow-lg bg-white">
+        <h2 className="text-3xl font-semibold text-center mb-6 text-purple-700">Registrar</h2>
         {error && <p className="text-red-500 mb-4">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block mb-1">Nome</label>
+            <label className="block mb-1 text-gray-700">Nome</label>
             <input
               type="text"
               value={name}
@@ -45,7 +49,7 @@ export default function Register() {
             />
           </div>
           <div>
-            <label className="block mb-1">Email</label>
+            <label className="block mb-1 text-gray-700">Email</label>
             <input
               type="email"
               value={email}
@@ -55,7 +59,7 @@ export default function Register() {
             />
           </div>
           <div>
-            <label className="block mb-1">Senha</label>
+            <label className="block mb-1 text-gray-700">Senha</label>
             <input
               type="password"
               value={password}
@@ -66,7 +70,7 @@ export default function Register() {
           </div>
           <button
             type="submit"
-            className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"
+            className="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 transition"
           >
             Registrar
           </button>
@@ -77,6 +81,7 @@ export default function Register() {
             Entrar
           </Link>
         </p>
+        </div>
       </div>
     </div>
   );
