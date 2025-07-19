@@ -28,44 +28,50 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-lg">
-        <h2 className="text-3xl font-semibold text-center mb-6">Login</h2>
-        {error && <p className="text-red-500 mb-4">{error}</p>}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block mb-1">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-              className="w-full border px-3 py-2 rounded"
-            />
-          </div>
-          <div>
-            <label className="block mb-1">Senha</label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              className="w-full border px-3 py-2 rounded"
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
-          >
-            Entrar
-          </button>
-        </form>
-        <p className="mt-4 text-center">
-          Ainda não tem conta?{' '}
-          <Link to="/register" className="text-blue-600 hover:underline">
-            Registre-se
-          </Link>
-        </p>
+    <div className="flex h-screen">
+      <div className="w-1/2 bg-purple-200"> 
+        <h2 className="text-6xl font-black antialiased text-center text-purple-600 py-90 px-50 break-normal"> GERENCIAMENTO E CADASTRO DE EMPRESAS</h2>
+      </div>
+      {/* Direita com formulário em fundo branco */}
+      <div className="w-1/2 flex items-center justify-center bg-white">
+        <div className="w-full max-w-md p-8 rounded-2xl shadow-lg bg-white">
+          <h2 className="text-3xl font-semibold text-center mb-6 text-purple-700">Login</h2>
+          {error && <p className="text-red-500 mb-4">{error}</p>}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block mb-1 text-gray-700">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                className="w-full border border-purple-300 px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-purple-400"
+              />
+            </div>
+            <div>
+              <label className="block mb-1 text-gray-700">Senha</label>
+              <input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                className="w-full border border-purple-300 px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-purple-400"
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 transition"
+            >
+              Entrar
+            </button>
+          </form>
+          <p className="mt-4 text-center text-gray-600">
+            Ainda não tem conta?{' '}
+            <Link to="/register" className="text-purple-600 hover:underline">
+              Registre-se
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
