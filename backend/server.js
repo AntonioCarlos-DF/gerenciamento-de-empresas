@@ -14,7 +14,6 @@ function authMiddleware(req, res, next) {
   if (!authHeader) {
     return res.status(401).json({ message: 'Token não fornecido.' });
   }
-
   const token = authHeader.split(' ')[1]; // Espera 'Bearer <token>'
   try {
     const decoded = jwt.verify(token, process.env.VENDERGAS);
@@ -47,7 +46,7 @@ async function start() {
             properties: {
               name: { bsonType: 'string', description: 'Nome obrigatório' },
               email: { bsonType: 'string', pattern: '^.+@.+\\..+$', description: 'E-mail válido obrigatório' },
-              password: { bsonType: 'string', minLength: 6, description: 'Senha obrigatória' }
+              password: { bsonType: 'string', minLength: 6, description: 'Senha obrigatória com no mínimo 6 caracteres' }
             }
           }
         }
@@ -60,17 +59,34 @@ async function start() {
     // Rotas abertas (registro e login)
     app.post('/api/register', async (req, res) => {
       const { name, email, password } = req.body;
-      const result = await users.insertOne({ name, email, password });
-      res.status(201).json({ id: result.insertedId });
+      // Validação básica antes do MongoDB
+      if (!name || !email || !password) {
+        return res.status(400).json({ message: 'Todos os campos (name, email, password) são obrigatórios.' });
+      }
+      if (password.length < 6) {
+        return res.status(400).json({ message: 'A senha deve ter no mínimo 6 caracteres.' });
+      }
+      try {
+        const result = await users.insertOne({ name, email, password });
+        res.status(201).json({ id: result.insertedId });
+      } catch (err) {
+        if (err.code === 121) { // DocumentValidationFailure
+          return res.status(400).json({ message: 'Falha na validação do documento: ' + err.errmsg });
+        }
+        console.error(err);
+        res.status(500).json({ message: 'Erro interno ao registrar usuário.' });
+      }
     });
 
     app.post('/api/login', async (req, res) => {
       const { email, password } = req.body;
+      if (!email || !password) {
+        return res.status(400).json({ message: 'Email e senha são obrigatórios.' });
+      }
       const user = await users.findOne({ email, password });
       if (!user) {
         return res.status(401).json({ success: false, message: 'Credenciais inválidas' });
       }
-      // Gera token JWT
       const token = jwt.sign(
         { id: user._id, email: user.email },
         process.env.PRIVATEKEY,
@@ -92,7 +108,7 @@ async function start() {
     });
 
   } catch (err) {
-    console.error(err);
+    console.error('Erro ao iniciar o servidor:', err);
   }
 }
 
