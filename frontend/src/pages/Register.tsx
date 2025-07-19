@@ -7,11 +7,13 @@ export default function Register() {
   const [password, setPassword] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const API_BASE = import.meta.env.VITE_API_BASE_URL;
+  const API_PORT = import.meta.env.VITE_API_BASE_PORT;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:3000/api/register', {
+      const res = await fetch(`${API_BASE}${API_PORT}/api/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
