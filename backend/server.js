@@ -24,10 +24,10 @@ async function start() {
     console.log("Conectado ao MongoDB");
 
     const db = client.db("desafio");
-    
+
     // Obter todas as coleções existentes
     const collections = await db.listCollections().toArray();
-    const collectionNames = collections.map(c => c.name);
+    const collectionNames = collections.map((c) => c.name);
 
     // Verificar e criar coleção users se necessário
     if (!collectionNames.includes("users")) {
@@ -61,9 +61,9 @@ async function start() {
       "companies",
       "customers",
       "orders",
-      "order_products" // Nova coleção para pedido_produto
+      "order_products", // Nova coleção para pedido_produto
     ];
-    
+
     for (const colName of requiredCollections) {
       if (!collectionNames.includes(colName)) {
         await db.createCollection(colName);
@@ -125,7 +125,15 @@ async function start() {
         process.env.PRIVATEKEY,
         { expiresIn: "1h" }
       );
-      res.json({ success: true, token });
+
+      // Retorna dados do usuário sem a senha
+      const userData = {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      };
+
+      res.json({ success: true, token, user: userData });
     });
 
     // ======================================
@@ -146,8 +154,8 @@ async function start() {
         const { name, price, description, companyId } = req.body;
 
         if (!name || !price || !companyId) {
-          return res.status(400).json({ 
-            message: "Nome, preço e empresa são obrigatórios" 
+          return res.status(400).json({
+            message: "Nome, preço e empresa são obrigatórios",
           });
         }
 
@@ -246,8 +254,8 @@ async function start() {
         const { tradeName, legalName, cnpj } = req.body;
 
         if (!tradeName || !legalName || !cnpj) {
-          return res.status(400).json({ 
-            message: "Nome fantasia, razão social e CNPJ são obrigatórios" 
+          return res.status(400).json({
+            message: "Nome fantasia, razão social e CNPJ são obrigatórios",
           });
         }
 
@@ -314,8 +322,8 @@ async function start() {
         const { name, email, phone, companyId } = req.body;
 
         if (!name || !email || !companyId) {
-          return res.status(400).json({ 
-            message: "Nome, email e empresa são obrigatórios" 
+          return res.status(400).json({
+            message: "Nome, email e empresa são obrigatórios",
           });
         }
 
@@ -381,31 +389,33 @@ async function start() {
     app.get("/api/orders", authMiddleware, async (req, res) => {
       try {
         // Agregar pedidos com informações relacionadas
-        const allOrders = await orders.aggregate([
-          {
-            $lookup: {
-              from: "customers",
-              localField: "customer",
-              foreignField: "_id",
-              as: "customer"
-            }
-          },
-          {
-            $lookup: {
-              from: "companies",
-              localField: "company",
-              foreignField: "_id",
-              as: "company"
-            }
-          },
-          {
-            $unwind: "$customer"
-          },
-          {
-            $unwind: "$company"
-          }
-        ]).toArray();
-        
+        const allOrders = await orders
+          .aggregate([
+            {
+              $lookup: {
+                from: "customers",
+                localField: "customer",
+                foreignField: "_id",
+                as: "customer",
+              },
+            },
+            {
+              $lookup: {
+                from: "companies",
+                localField: "company",
+                foreignField: "_id",
+                as: "company",
+              },
+            },
+            {
+              $unwind: "$customer",
+            },
+            {
+              $unwind: "$company",
+            },
+          ])
+          .toArray();
+
         res.json(allOrders);
       } catch (err) {
         console.error(err);
@@ -418,8 +428,8 @@ async function start() {
         const { number, customerId, companyId, observation } = req.body;
 
         if (!number || !customerId || !companyId) {
-          return res.status(400).json({ 
-            message: "Número, cliente e empresa são obrigatórios" 
+          return res.status(400).json({
+            message: "Número, cliente e empresa são obrigatórios",
           });
         }
 
@@ -433,7 +443,7 @@ async function start() {
           company: new ObjectId(companyId),
           observation: observation || "",
           date: new Date(),
-          createdAt: new Date()
+          createdAt: new Date(),
         };
 
         const result = await orders.insertOne(newOrder);
@@ -493,8 +503,8 @@ async function start() {
         const { orderId, productId, quantity } = req.body;
 
         if (!orderId || !productId || !quantity) {
-          return res.status(400).json({ 
-            message: "Pedido, produto e quantidade são obrigatórios" 
+          return res.status(400).json({
+            message: "Pedido, produto e quantidade são obrigatórios",
           });
         }
 
@@ -506,7 +516,7 @@ async function start() {
           order: new ObjectId(orderId),
           product: new ObjectId(productId),
           quantity: parseInt(quantity),
-          createdAt: new Date()
+          createdAt: new Date(),
         };
 
         const result = await orderProducts.insertOne(newOrderProduct);
@@ -517,34 +527,40 @@ async function start() {
       }
     });
 
-    app.get("/api/order-products/:orderId", authMiddleware, async (req, res) => {
-      try {
-        const { orderId } = req.params;
+    app.get(
+      "/api/order-products/:orderId",
+      authMiddleware,
+      async (req, res) => {
+        try {
+          const { orderId } = req.params;
 
-        if (!ObjectId.isValid(orderId)) {
-          return res.status(400).json({ message: "ID do pedido inválido" });
+          if (!ObjectId.isValid(orderId)) {
+            return res.status(400).json({ message: "ID do pedido inválido" });
+          }
+
+          // Agregar produtos do pedido com informações completas
+          const orderItems = await orderProducts
+            .aggregate([
+              { $match: { order: new ObjectId(orderId) } },
+              {
+                $lookup: {
+                  from: "products",
+                  localField: "product",
+                  foreignField: "_id",
+                  as: "product",
+                },
+              },
+              { $unwind: "$product" },
+            ])
+            .toArray();
+
+          res.json(orderItems);
+        } catch (err) {
+          console.error(err);
+          res.status(500).json({ message: "Erro ao buscar itens do pedido" });
         }
-
-        // Agregar produtos do pedido com informações completas
-        const orderItems = await orderProducts.aggregate([
-          { $match: { order: new ObjectId(orderId) } },
-          {
-            $lookup: {
-              from: "products",
-              localField: "product",
-              foreignField: "_id",
-              as: "product"
-            }
-          },
-          { $unwind: "$product" }
-        ]).toArray();
-
-        res.json(orderItems);
-      } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Erro ao buscar itens do pedido" });
       }
-    });
+    );
 
     app.put("/api/order-products/:id", authMiddleware, async (req, res) => {
       try {
