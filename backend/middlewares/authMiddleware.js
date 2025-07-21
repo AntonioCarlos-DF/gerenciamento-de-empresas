@@ -1,20 +1,20 @@
 const jwt = require('jsonwebtoken');
 
-function authMiddleware(req, res, next) {
-  const token = req.headers.authorization?.split(' ')[1]; // Formato: Bearer token
-
-  if (!token) return res.status(401).json({ message: 'Token não fornecido.' });
+module.exports = function (req, res, next) {
+  const token = req.headers['authorization']?.split(' ')[1];
+  
+  if (!token) {
+    return res.status(401).json({ message: 'Token não fornecido' });
+  }
 
   try {
     const decoded = jwt.verify(token, process.env.PRIVATEKEY);
-    req.user = decoded;
+    req.user = {
+      id: decoded.id,
+      email: decoded.email
+    };
     next();
-  } catch (err) {
-    if (err.name === 'TokenExpiredError') {
-      return res.status(401).json({ message: 'Token expirado. Faça login novamente.' });
-    }
-    return res.status(403).json({ message: 'Token inválido.' });
+  } catch (error) {
+    res.status(401).json({ message: 'Token inválido' });
   }
-}
-
-module.exports = authMiddleware;
+};
