@@ -12,7 +12,6 @@ import NewOrderPage from './pages/NewOrderPage';
 
 interface User {
   name: string;
-  // adicione demais campos conforme seu objeto de usuário
 }
 
 export default function Dashboard() {

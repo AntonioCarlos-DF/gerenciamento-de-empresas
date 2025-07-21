@@ -25,11 +25,9 @@ async function start() {
 
     const db = client.db("desafio");
 
-    // Obter todas as coleções existentes
     const collections = await db.listCollections().toArray();
     const collectionNames = collections.map((c) => c.name);
 
-    // Verificar e criar coleção users se necessário
     if (!collectionNames.includes("users")) {
       await db.createCollection("users", {
         validator: {
@@ -55,13 +53,12 @@ async function start() {
       console.log('Coleção "users" criada com validação');
     }
 
-    // Verificar e criar outras coleções
     const requiredCollections = [
       "products",
       "companies",
       "customers",
       "orders",
-      "order_products", // Nova coleção para pedido_produto
+      "order_products",
     ];
 
     for (const colName of requiredCollections) {
@@ -78,22 +75,40 @@ async function start() {
     const orders = db.collection("orders");
     const orderProducts = db.collection("order_products");
 
-    // Rotas abertas (registro e login)
     app.post("/api/register", async (req, res) => {
       const { name, email, password } = req.body;
-      // Validação básica antes do MongoDB
       if (!name || !email || !password) {
         return res.status(400).json({
           message: "Todos os campos (name, email, password) são obrigatórios.",
         });
       }
-      if (password.length < 6) {
-        return res
-          .status(400)
-          .json({ message: "A senha deve ter no mínimo 6 caracteres." });
-      }
+      const normalizedEmail = email.toLowerCase().trim();
       try {
-        const result = await users.insertOne({ name, email, password });
+        const existingUser = await users.findOne({ email: normalizedEmail });
+        if (existingUser) {
+          return res
+            .status(400)
+            .json({ message: "Este email já está cadastrado" });
+        }
+      } catch (err) {
+        console.error("Erro ao verificar email:", err);
+        return res
+          .status(500)
+          .json({ message: "Erro interno ao verificar email" });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({
+          message: "A senha deve ter no mínimo 6 caracteres.",
+        });
+      }
+
+      try {
+        const result = await users.insertOne({
+          name,
+          email: normalizedEmail,
+          password,
+        });
         res.status(201).json({ id: result.insertedId });
       } catch (err) {
         if (err.code === 121) {
@@ -108,12 +123,13 @@ async function start() {
 
     app.post("/api/login", async (req, res) => {
       const { email, password } = req.body;
+      const normalizedEmail = email.toLowerCase().trim();
       if (!email || !password) {
         return res
           .status(400)
           .json({ message: "Email e senha são obrigatórios." });
       }
-      const user = await users.findOne({ email, password });
+      const user = await users.findOne({ email: normalizedEmail, password });
       if (!user) {
         return res
           .status(401)
@@ -163,7 +179,6 @@ async function start() {
       try {
         const { name, price, description, company } = req.body;
 
-        // Validações
         if (!name || typeof name !== "string" || name.trim().length < 2) {
           return res.status(400).json({
             message: "Nome do produto deve ter pelo menos 2 caracteres",
@@ -183,10 +198,9 @@ async function start() {
           });
         }
 
-        // Verificar se empresa existe e pertence ao usuário
         const companyExists = await companies.findOne({
           _id: new ObjectId(company),
-          userId: new ObjectId(req.user.id)
+          userId: new ObjectId(req.user.id),
         });
 
         if (!companyExists) {
@@ -201,7 +215,7 @@ async function start() {
           description: description?.trim() || "",
           company: new ObjectId(company),
           createdAt: new Date(),
-          userId: new ObjectId(req.user.id)
+          userId: new ObjectId(req.user.id),
         };
 
         const result = await products.insertOne(newProduct);
@@ -253,10 +267,9 @@ async function start() {
           return res.status(400).json({ message: "ID inválido" });
         }
 
-        // Verificar se o produto pertence ao usuário
         const product = await products.findOne({
           _id: new ObjectId(id),
-          userId: new ObjectId(req.user.id)
+          userId: new ObjectId(req.user.id),
         });
 
         if (!product) {
@@ -268,15 +281,14 @@ async function start() {
         if (price) updateData.price = parseFloat(price);
         if (description) updateData.description = description;
         if (companyId) {
-          // Verificar se a nova empresa pertence ao usuário
           const companyExists = await companies.findOne({
             _id: new ObjectId(companyId),
-            userId: new ObjectId(req.user.id)
+            userId: new ObjectId(req.user.id),
           });
-          
+
           if (!companyExists) {
             return res.status(400).json({
-              message: "Empresa não encontrada ou não pertence a você"
+              message: "Empresa não encontrada ou não pertence a você",
             });
           }
           updateData.company = new ObjectId(companyId);
@@ -290,7 +302,7 @@ async function start() {
         if (result.matchedCount === 0) {
           return res.status(404).json({ message: "Produto não encontrado" });
         }
-        
+
         const updatedProduct = await products.findOne({
           _id: new ObjectId(id),
         });
@@ -316,7 +328,7 @@ async function start() {
 
         const product = await products.findOne({
           _id: new ObjectId(id),
-          userId: new ObjectId(req.user.id)
+          userId: new ObjectId(req.user.id),
         });
 
         if (!product) {
@@ -338,10 +350,9 @@ async function start() {
           return res.status(400).json({ message: "ID de produto inválido" });
         }
 
-        // Verificar se o produto pertence ao usuário
         const product = await products.findOne({
           _id: new ObjectId(id),
-          userId: new ObjectId(req.user.id)
+          userId: new ObjectId(req.user.id),
         });
 
         if (!product) {
@@ -412,10 +423,9 @@ async function start() {
           return res.status(400).json({ message: "ID inválido" });
         }
 
-        // Verificar se a empresa pertence ao usuário
         const company = await companies.findOne({
           _id: new ObjectId(id),
-          userId: new ObjectId(req.user.id)
+          userId: new ObjectId(req.user.id),
         });
 
         if (!company) {
@@ -436,6 +446,10 @@ async function start() {
           return res.status(404).json({ message: "Empresa não encontrada" });
         }
 
+        const updatedCompany = await companies.findOne({
+          _id: new ObjectId(id),
+        });
+        return res.json(updatedCompany);
         res.json({ message: "Empresa atualizada com sucesso" });
       } catch (err) {
         console.error(err);
@@ -447,10 +461,9 @@ async function start() {
       try {
         const { id } = req.params;
 
-        // Verificar se a empresa pertence ao usuário
         const company = await companies.findOne({
           _id: new ObjectId(id),
-          userId: new ObjectId(req.user.id)
+          userId: new ObjectId(req.user.id),
         });
 
         if (!company) {
@@ -482,7 +495,7 @@ async function start() {
         const allCustomers = await customers
           .find({ userId: new ObjectId(req.user.id) })
           .toArray();
-          
+
         res.json(allCustomers);
       } catch (err) {
         console.error(err);
@@ -504,15 +517,14 @@ async function start() {
           return res.status(400).json({ message: "ID da empresa inválido" });
         }
 
-        // Verificar se a empresa pertence ao usuário
         const company = await companies.findOne({
           _id: new ObjectId(companyId),
-          userId: new ObjectId(req.user.id)
+          userId: new ObjectId(req.user.id),
         });
 
         if (!company) {
           return res.status(400).json({
-            message: "Empresa não encontrada ou não pertence a você"
+            message: "Empresa não encontrada ou não pertence a você",
           });
         }
 
@@ -522,7 +534,7 @@ async function start() {
           phone: phone || "",
           company: new ObjectId(companyId),
           createdAt: new Date(),
-          userId: new ObjectId(req.user.id)
+          userId: new ObjectId(req.user.id),
         };
 
         const result = await customers.insertOne(newCustomer);
@@ -541,17 +553,13 @@ async function start() {
         if (!ObjectId.isValid(id)) {
           return res.status(400).json({ message: "ID inválido" });
         }
-
-        // Verificar se o cliente pertence ao usuário
         const customer = await customers.findOne({
           _id: new ObjectId(id),
-          userId: new ObjectId(req.user.id)
+          userId: new ObjectId(req.user.id),
         });
-
         if (!customer) {
           return res.status(404).json({ message: "Cliente não encontrado" });
         }
-
         const updateData = {};
         if (name) updateData.name = name;
         if (email) updateData.email = email;
@@ -560,19 +568,15 @@ async function start() {
           if (!ObjectId.isValid(companyId)) {
             return res.status(400).json({ message: "ID da empresa inválido" });
           }
-          
-          // Verificar se a nova empresa pertence ao usuário
           const company = await companies.findOne({
             _id: new ObjectId(companyId),
-            userId: new ObjectId(req.user.id)
+            userId: new ObjectId(req.user.id),
           });
-          
           if (!company) {
             return res.status(400).json({
-              message: "Empresa não encontrada ou não pertence a você"
+              message: "Empresa não encontrada ou não pertence a você",
             });
           }
-          
           updateData.company = new ObjectId(companyId);
         }
 
@@ -585,7 +589,10 @@ async function start() {
           return res.status(404).json({ message: "Cliente não encontrado" });
         }
 
-        res.json({ message: "Cliente atualizado com sucesso" });
+        const updatedCustomer = await customers.findOne({
+          _id: new ObjectId(id),
+        });
+        return res.json(updatedCustomer);
       } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Erro ao atualizar cliente" });
@@ -600,10 +607,9 @@ async function start() {
           return res.status(400).json({ message: "ID inválido" });
         }
 
-        // Verificar se o cliente pertence ao usuário
         const customer = await customers.findOne({
           _id: new ObjectId(id),
-          userId: new ObjectId(req.user.id)
+          userId: new ObjectId(req.user.id),
         });
 
         if (!customer) {
@@ -631,15 +637,15 @@ async function start() {
         const ordersList = await orders
           .aggregate([
             {
-              $match: { userId: new ObjectId(req.user.id) }
+              $match: { userId: new ObjectId(req.user.id) },
             },
             {
               $lookup: {
                 from: "customers",
                 localField: "customer",
                 foreignField: "_id",
-                as: "customer"
-              }
+                as: "customer",
+              },
             },
             { $unwind: "$customer" },
             {
@@ -647,8 +653,8 @@ async function start() {
                 from: "companies",
                 localField: "company",
                 foreignField: "_id",
-                as: "company"
-              }
+                as: "company",
+              },
             },
             { $unwind: "$company" },
             {
@@ -680,11 +686,11 @@ async function start() {
                 number: 1,
                 customer: {
                   _id: 1,
-                  name: 1
+                  name: 1,
                 },
                 company: {
                   _id: 1,
-                  tradeName: 1
+                  tradeName: 1,
                 },
                 observation: 1,
                 date: 1,
@@ -716,27 +722,25 @@ async function start() {
           return res.status(400).json({ message: "IDs inválidos" });
         }
 
-        // Verificar se o cliente pertence ao usuário
         const customer = await customers.findOne({
           _id: new ObjectId(customerId),
-          userId: new ObjectId(req.user.id)
+          userId: new ObjectId(req.user.id),
         });
 
         if (!customer) {
           return res.status(400).json({
-            message: "Cliente não encontrado ou não pertence a você"
+            message: "Cliente não encontrado ou não pertence a você",
           });
         }
 
-        // Verificar se a empresa pertence ao usuário
         const company = await companies.findOne({
           _id: new ObjectId(companyId),
-          userId: new ObjectId(req.user.id)
+          userId: new ObjectId(req.user.id),
         });
 
         if (!company) {
           return res.status(400).json({
-            message: "Empresa não encontrada ou não pertence a você"
+            message: "Empresa não encontrada ou não pertence a você",
           });
         }
 
@@ -749,7 +753,7 @@ async function start() {
           date: new Date(),
           createdAt: new Date(),
           status: "pendente",
-          userId: new ObjectId(req.user.id)
+          userId: new ObjectId(req.user.id),
         };
 
         const result = await orders.insertOne(newOrder);
@@ -769,10 +773,9 @@ async function start() {
           return res.status(400).json({ message: "ID inválido" });
         }
 
-        // Verificar se o pedido pertence ao usuário
         const order = await orders.findOne({
           _id: new ObjectId(id),
-          userId: new ObjectId(req.user.id)
+          userId: new ObjectId(req.user.id),
         });
 
         if (!order) {
@@ -787,6 +790,34 @@ async function start() {
           return res.status(400).json({ message: "Nada para atualizar" });
         }
 
+        const orderItems = await orderProducts
+          .aggregate([
+            { $match: { order: new ObjectId(id) } },
+            {
+              $lookup: {
+                from: "products",
+                localField: "product",
+                foreignField: "_id",
+                as: "product",
+              },
+            },
+            { $unwind: "$product" },
+            {
+              $group: {
+                _id: null,
+                total: {
+                  $sum: {
+                    $multiply: ["$quantity", "$product.price"],
+                  },
+                },
+              },
+            },
+          ])
+          .toArray();
+
+        const newTotal = orderItems.length > 0 ? orderItems[0].total : 0;
+        updateFields.total = newTotal;
+
         const result = await orders.updateOne(
           { _id: new ObjectId(id) },
           { $set: updateFields }
@@ -796,7 +827,8 @@ async function start() {
           return res.status(404).json({ message: "Pedido não encontrado" });
         }
 
-        res.json({ message: "Pedido atualizado com sucesso" });
+        const updatedOrder = await orders.findOne({ _id: new ObjectId(id) });
+        res.json(updatedOrder);
       } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Erro ao atualizar pedido" });
@@ -811,20 +843,17 @@ async function start() {
           return res.status(400).json({ message: "ID inválido" });
         }
 
-        // Verificar se o pedido pertence ao usuário
         const order = await orders.findOne({
           _id: new ObjectId(id),
-          userId: new ObjectId(req.user.id)
+          userId: new ObjectId(req.user.id),
         });
 
         if (!order) {
           return res.status(404).json({ message: "Pedido não encontrado" });
         }
 
-        // Deletar itens do pedido primeiro
         await orderProducts.deleteMany({ order: new ObjectId(id) });
 
-        // Deletar o pedido
         const result = await orders.deleteOne({ _id: new ObjectId(id) });
 
         if (result.deletedCount === 0) {
@@ -855,27 +884,25 @@ async function start() {
           return res.status(400).json({ message: "IDs inválidos" });
         }
 
-        // Verificar se o pedido pertence ao usuário
         const order = await orders.findOne({
           _id: new ObjectId(orderId),
-          userId: new ObjectId(req.user.id)
+          userId: new ObjectId(req.user.id),
         });
 
         if (!order) {
           return res.status(400).json({
-            message: "Pedido não encontrado ou não pertence a você"
+            message: "Pedido não encontrado ou não pertence a você",
           });
         }
 
-        // Verificar se o produto pertence ao usuário
         const product = await products.findOne({
           _id: new ObjectId(productId),
-          userId: new ObjectId(req.user.id)
+          userId: new ObjectId(req.user.id),
         });
 
         if (!product) {
           return res.status(400).json({
-            message: "Produto não encontrado ou não pertence a você"
+            message: "Produto não encontrado ou não pertence a você",
           });
         }
 
@@ -905,15 +932,14 @@ async function start() {
             return res.status(400).json({ message: "ID do pedido inválido" });
           }
 
-          // Verificar se o pedido pertence ao usuário
           const order = await orders.findOne({
             _id: new ObjectId(orderId),
-            userId: new ObjectId(req.user.id)
+            userId: new ObjectId(req.user.id),
           });
 
           if (!order) {
             return res.status(400).json({
-              message: "Pedido não encontrado ou não pertence a você"
+              message: "Pedido não encontrado ou não pertence a você",
             });
           }
 
@@ -948,25 +974,21 @@ async function start() {
         if (!ObjectId.isValid(id)) {
           return res.status(400).json({ message: "ID inválido" });
         }
-
-        // Verificar se o item existe e pertence a um pedido do usuário
         const orderItem = await orderProducts.findOne({
-          _id: new ObjectId(id)
+          _id: new ObjectId(id),
         });
-        
+
         if (!orderItem) {
           return res.status(404).json({ message: "Item não encontrado" });
         }
-        
-        // Verificar se o pedido pertence ao usuário
         const order = await orders.findOne({
           _id: orderItem.order,
-          userId: new ObjectId(req.user.id)
+          userId: new ObjectId(req.user.id),
         });
 
         if (!order) {
           return res.status(403).json({
-            message: "Você não tem permissão para editar este item"
+            message: "Você não tem permissão para editar este item",
           });
         }
 
@@ -1000,16 +1022,14 @@ async function start() {
           if (!ObjectId.isValid(orderId)) {
             return res.status(400).json({ message: "ID do pedido inválido" });
           }
-
-          // Verificar se o pedido pertence ao usuário
           const order = await orders.findOne({
             _id: new ObjectId(orderId),
-            userId: new ObjectId(req.user.id)
+            userId: new ObjectId(req.user.id),
           });
 
           if (!order) {
             return res.status(403).json({
-              message: "Você não tem permissão para excluir estes itens"
+              message: "Você não tem permissão para excluir estes itens",
             });
           }
 

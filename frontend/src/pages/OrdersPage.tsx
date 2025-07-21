@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import API_URL, { authHeaders } from '../services/api';
+import API_URL, { authHeaders } from "../services/api";
 
 interface Order {
   _id: string;
@@ -86,6 +86,7 @@ export default function OrdersPage({ token }: { token: string }) {
     if (!editingOrder) return;
 
     try {
+
       for (const item of orderItems) {
         await fetch(`${API_URL}/order-products/${item._id}`, {
           method: "PUT",
@@ -110,11 +111,13 @@ export default function OrdersPage({ token }: { token: string }) {
       });
 
       if (!response.ok) throw new Error("Erro ao atualizar pedido");
-      
-      const updatedData = await response.json();
+
+
+      const updatedOrder: Order = await response.json();
+
       setOrders(
         orders.map((order) =>
-          order._id === editingOrder._id ? updatedData : order
+          order._id === editingOrder._id ? updatedOrder : order
         )
       );
 
@@ -164,8 +167,10 @@ export default function OrdersPage({ token }: { token: string }) {
     return matchesSearch && matchesStatus;
   });
 
-  if (loading) return <div className="text-center py-8">Carregando pedidos...</div>;
-  if (error) return <div className="text-red-500 text-center py-8">{error}</div>;
+  if (loading)
+    return <div className="text-center py-8">Carregando pedidos...</div>;
+  if (error)
+    return <div className="text-red-500 text-center py-8">{error}</div>;
 
   return (
     <div>
@@ -218,13 +223,18 @@ export default function OrdersPage({ token }: { token: string }) {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Ações
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Detalhes
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredOrders.map((order) => {
-                  const orderDate = order.date ? new Date(order.date) : new Date();
+                  const orderDate = order.date
+                    ? new Date(order.date)
+                    : new Date();
                   const formattedDate = orderDate.toLocaleDateString("pt-BR");
-                  
+
                   return (
                     <tr key={order._id}>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -256,16 +266,18 @@ export default function OrdersPage({ token }: { token: string }) {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button
-                          className="text-blue-600 hover:text-blue-900 mr-3"
-                          onClick={() => handleEditOrder(order)}
-                        >
-                          Editar
-                        </button>
-                        <button
                           className="text-red-600 hover:text-red-900"
                           onClick={() => handleDeleteOrder(order._id)}
                         >
                           Excluir
+                        </button>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button
+                          className="text-blue-600 hover:text-blue-900 mr-3"
+                          onClick={() => handleEditOrder(order)}
+                        >
+                          Detalhes
                         </button>
                       </td>
                     </tr>
