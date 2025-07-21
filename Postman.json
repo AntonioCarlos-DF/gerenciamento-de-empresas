@@ -1,0 +1,1083 @@
+{
+  "info": {
+    "_postman_id": "b2e3c7ad-1234-5678-abcd-123456abcdef",
+    "name": "Sistema de Gerenciamento de Empresas API",
+    "description": "API completa para gerenciamento de empresas, clientes, produtos e pedidos",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "description": "URL base da API"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "description": "Token JWT de autenticação"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "description": "ID do usuário autenticado"
+    },
+    {
+      "key": "companyId",
+      "value": "",
+      "description": "ID de empresa para uso em requisições"
+    },
+    {
+      "key": "customerId",
+      "value": "",
+      "description": "ID de cliente para uso em requisições"
+    },
+    {
+      "key": "productId",
+      "value": "",
+      "description": "ID de produto para uso em requisições"
+    },
+    {
+      "key": "orderId",
+      "value": "",
+      "description": "ID de pedido para uso em requisições"
+    },
+    {
+      "key": "orderProductId",
+      "value": "",
+      "description": "ID de item de pedido para uso em requisições"
+    }
+  ],
+  "item": [
+    {
+      "name": "Autenticação",
+      "description": "Endpoints para registro e autenticação de usuários",
+      "item": [
+        {
+          "name": "Registrar novo usuário",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}",
+              "description": "Dados de registro do usuário"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "register"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sucesso",
+              "originalRequest": {},
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"id\": \"60d5ec9f4f4d4e001f123456\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login de usuário",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Salva o token e o ID do usuário nas variáveis de ambiente",
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set(\"token\", jsonData.token);",
+                  "pm.environment.set(\"userId\", jsonData.user.id);"
+                ],
+                "type": "text/javascript",
+                "description": "Salva o token JWT retornado para uso em requisições subsequentes"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}",
+              "description": "Credenciais de acesso"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "login"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sucesso",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"user\": {\n    \"id\": \"60d5ec9f4f4d4e001f123456\",\n    \"name\": \"Test User\",\n    \"email\": \"test@example.com\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Verificar disponibilidade de e-mail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/check-email?email=test@example.com",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "check-email"
+              ],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "test@example.com"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sucesso",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"exists\": true\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Empresas",
+      "description": "Endpoints para gerenciamento de empresas",
+      "item": [
+        {
+          "name": "Listar todas as empresas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/companies",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "companies"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sucesso",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "[\n  {\n    \"_id\": \"60d5ec9f4f4d4e001f654321\",\n    \"tradeName\": \"Minha Empresa\",\n    \"legalName\": \"Razao Social Ltda\",\n    \"cnpj\": \"12.345.678/0001-00\",\n    \"userId\": \"{{userId}}\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Criar nova empresa",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Salva o ID da empresa criada",
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set(\"companyId\", jsonData._id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tradeName\": \"Minha Empresa\",\n  \"legalName\": \"Razao Social Ltda\",\n  \"cnpj\": \"12.345.678/0001-00\"\n}",
+              "description": "Dados da empresa"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/companies",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "companies"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sucesso",
+              "originalRequest": {},
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"_id\": \"60d5ec9f4f4d4e001f654321\",\n  \"tradeName\": \"Minha Empresa\",\n  \"legalName\": \"Razao Social Ltda\",\n  \"cnpj\": \"12.345.678/0001-00\",\n  \"createdAt\": \"2023-06-25T12:34:56.789Z\",\n  \"userId\": \"{{userId}}\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Atualizar empresa",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tradeName\": \"Empresa Atualizada\"\n}",
+              "description": "Campos a serem atualizados"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/companies/{{companyId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "companies",
+                "{{companyId}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sucesso",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Empresa atualizada com sucesso\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Excluir empresa",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/companies/{{companyId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "companies",
+                "{{companyId}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sucesso",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Empresa excluída com sucesso\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Clientes",
+      "description": "Endpoints para gerenciamento de clientes",
+      "item": [
+        {
+          "name": "Listar todos os clientes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/customers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "customers"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sucesso",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "[\n  {\n    \"_id\": \"60d5ec9f4f4d4e001f987654\",\n    \"name\": \"Cliente Teste\",\n    \"email\": \"cliente@teste.com\",\n    \"phone\": \"\",\n    \"company\": \"{{companyId}}\",\n    \"userId\": \"{{userId}}\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Criar novo cliente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Salva o ID do cliente criado",
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set(\"customerId\", jsonData._id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Cliente Teste\",\n  \"email\": \"cliente@teste.com\",\n  \"phone\": \"\",\n  \"companyId\": \"{{companyId}}\"\n}",
+              "description": "Dados do cliente"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/customers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "customers"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sucesso",
+              "originalRequest": {},
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"_id\": \"60d5ec9f4f4d4e001f987654\",\n  \"name\": \"Cliente Teste\",\n  \"email\": \"cliente@teste.com\",\n  \"phone\": \"\",\n  \"company\": \"{{companyId}}\",\n  \"createdAt\": \"2023-06-25T12:34:56.789Z\",\n  \"userId\": \"{{userId}}\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Atualizar cliente",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Cliente Atualizado\"\n}",
+              "description": "Campos a serem atualizados"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/{{customerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "customers",
+                "{{customerId}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sucesso",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Cliente atualizado com sucesso\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Excluir cliente",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/{{customerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "customers",
+                "{{customerId}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sucesso",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Cliente excluído com sucesso\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Produtos",
+      "description": "Endpoints para gerenciamento de produtos",
+      "item": [
+        {
+          "name": "Listar todos os produtos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sucesso",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "[\n  {\n    \"_id\": \"60d5ec9f4f4d4e001f112233\",\n    \"name\": \"Produto Teste\",\n    \"price\": 100.5,\n    \"description\": \"Descrição do produto\",\n    \"company\": \"{{companyId}}\",\n    \"userId\": \"{{userId}}\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Criar novo produto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Salva o ID do produto criado",
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set(\"productId\", jsonData._id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Produto Teste\",\n  \"price\": 100.50,\n  \"description\": \"Descrição do produto\",\n  \"company\": \"{{companyId}}\"\n}",
+              "description": "Dados do produto"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sucesso",
+              "originalRequest": {},
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"_id\": \"60d5ec9f4f4d4e001f112233\",\n  \"name\": \"Produto Teste\",\n  \"price\": 100.5,\n  \"description\": \"Descrição do produto\",\n  \"company\": \"{{companyId}}\",\n  \"createdAt\": \"2023-06-25T12:34:56.789Z\",\n  \"userId\": \"{{userId}}\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Obter detalhes de um produto",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "{{productId}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sucesso",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"_id\": \"60d5ec9f4f4d4e001f112233\",\n  \"name\": \"Produto Teste\",\n  \"price\": 100.5,\n  \"description\": \"Descrição do produto\",\n  \"company\": \"{{companyId}}\",\n  \"userId\": \"{{userId}}\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Atualizar produto",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 150.75\n}",
+              "description": "Campos a serem atualizados"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "{{productId}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sucesso",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Produto atualizado com sucesso\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Excluir produto",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "{{productId}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sucesso",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Produto excluído com sucesso\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Pedidos",
+      "description": "Endpoints para gerenciamento de pedidos",
+      "item": [
+        {
+          "name": "Listar todos os pedidos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sucesso",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "[\n  {\n    \"_id\": \"60d5ec9f4f4d4e001f445566\",\n    \"number\": \"PED-1687691696123\",\n    \"customer\": {\n      \"_id\": \"{{customerId}}\",\n      \"name\": \"Cliente Teste\"\n    },\n    \"company\": {\n      \"_id\": \"{{companyId}}\",\n      \"tradeName\": \"Minha Empresa\"\n    },\n    \"observation\": \"Observação\",\n    \"total\": 201,\n    \"date\": \"2023-06-25T12:34:56.789Z\",\n    \"status\": \"pendente\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Criar novo pedido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Salva o ID do pedido criado",
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set(\"orderId\", jsonData._id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{customerId}}\",\n  \"companyId\": \"{{companyId}}\",\n  \"observation\": \"Observação\",\n  \"total\": 0\n}",
+              "description": "Dados do pedido"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sucesso",
+              "originalRequest": {},
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"_id\": \"60d5ec9f4f4d4e001f445566\",\n  \"number\": \"PED-1687691696123\",\n  \"customer\": \"{{customerId}}\",\n  \"company\": \"{{companyId}}\",\n  \"observation\": \"Observação\",\n  \"total\": 0,\n  \"date\": \"2023-06-25T12:34:56.789Z\",\n  \"createdAt\": \"2023-06-25T12:34:56.789Z\",\n  \"status\": \"pendente\",\n  \"userId\": \"{{userId}}\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Atualizar pedido",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"enviado\",\n  \"observation\": \"Pedido enviado para entrega\"\n}",
+              "description": "Campos a serem atualizados"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{orderId}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sucesso",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"_id\": \"60d5ec9f4f4d4e001f445566\",\n  \"number\": \"PED-1687691696123\",\n  \"customer\": {\n    \"_id\": \"{{customerId}}\",\n    \"name\": \"Cliente Teste\"\n  },\n  \"company\": {\n    \"_id\": \"{{companyId}}\",\n    \"tradeName\": \"Minha Empresa\"\n  },\n  \"observation\": \"Pedido enviado para entrega\",\n  \"total\": 201,\n  \"date\": \"2023-06-25T12:34:56.789Z\",\n  \"status\": \"enviado\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Excluir pedido",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{orderId}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sucesso",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Pedido deletado com sucesso\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Itens de Pedido",
+      "description": "Endpoints para gerenciamento de itens de pedido",
+      "item": [
+        {
+          "name": "Adicionar item ao pedido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Salva o ID do item de pedido criado",
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set(\"orderProductId\", jsonData._id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"{{orderId}}\",\n  \"productId\": \"{{productId}}\",\n  \"quantity\": 2\n}",
+              "description": "Dados do item de pedido"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/order-products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "order-products"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sucesso",
+              "originalRequest": {},
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"_id\": \"60d5ec9f4f4d4e001f778899\",\n  \"order\": \"{{orderId}}\",\n  \"product\": \"{{productId}}\",\n  \"quantity\": 2,\n  \"createdAt\": \"2023-06-25T12:34:56.789Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Listar itens de um pedido",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/order-products/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "order-products",
+                "{{orderId}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sucesso",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "[\n  {\n    \"_id\": \"60d5ec9f4f4d4e001f778899\",\n    \"order\": \"{{orderId}}\",\n    \"product\": {\n      \"_id\": \"{{productId}}\",\n      \"name\": \"Produto Teste\",\n      \"price\": 100.5\n    },\n    \"quantity\": 2\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Atualizar item de pedido",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 5\n}",
+              "description": "Quantidade atualizada"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/order-products/{{orderProductId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "order-products",
+                "{{orderProductId}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sucesso",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Item atualizado com sucesso\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Excluir item de pedido",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/order-products/{{orderProductId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "order-products",
+                "{{orderProductId}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sucesso",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Item excluído com sucesso\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Excluir todos os itens de um pedido",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/order-products/delete-by-order/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "order-products",
+                "delete-by-order",
+                "{{orderId}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sucesso",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"2 itens deletados com sucesso\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

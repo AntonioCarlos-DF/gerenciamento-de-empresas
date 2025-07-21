@@ -1,123 +1,208 @@
-# 🛠️ Backend - Desafio Vendergas
+# Backend do Sistema de Gerenciamento
 
-Este é o backend da aplicação desenvolvida para o desafio técnico da empresa **Vendergas**, utilizando Node.js, Express, MongoDB e autenticação JWT.
+Este é o backend do Sistema de Gerenciamento de Empresas, desenvolvido com Node.js, Express e MongoDB.
 
----
+## Tecnologias Principais
 
-## 🚀 Tecnologias utilizadas
+- **Node.js**: Ambiente de execução JavaScript
+- **Express**: Framework web para Node.js
+- **MongoDB**: Banco de dados NoSQL
+- **Mongoose**: ODM (Object Data Modeling) para MongoDB
+- **JWT**: Autenticação baseada em tokens
+- **Dotenv**: Gerenciamento de variáveis de ambiente
+- **Cors**: Middleware para habilitar CORS
 
-- Node.js
-- Express.js
-- MongoDB Atlas
-- JWT (Json Web Token)
-- dotenv
-- CORS
-
----
-
-## 🧪 Requisitos atendidos
-
-- [x] Dados persistidos em banco MongoDB com schema de validação
-- [x] Autenticação JWT em todas as rotas (PrivateKey via `.env`)
-- [x] Porta configurada para `3000`
-- [x] Documentação de setup neste `README.md`
-- [x] Gitflow com Pull Requests e branches de feature
-
----
-
-## ⚙️ Setup do Projeto
-
-### 1. Clonar o repositório
+## Estrutura de Pastas
 
 ```bash
-git clone https://github.com/seu-usuario/seu-repo.git
-cd backend
+backend/
+│ └── middlewares/ # Middlewares de autenticação e validação
+│   └── authMiddleware.js
+│
+├── .env.example # Exemplo de arquivo de ambiente
+├── package.json # Dependências e scripts
+└── server.js # Ponto de entrada da aplicação e endpoints
+```
+---
+## Configuração
+
+### 1. Se não criou ainda, crie o `.env`
+
+```bash
+touch .env
 ```
 
----
-
-### 2. Criar o arquivo .env
-Crie um arquivo chamado .env na raiz da pasta backend/ com o seguinte conteúdo:
+### 2. Configure as variaveis no arquivo `.env`
 
 ```bash
+MONGO_URI=mongodb+srv://<Seu_user_mongoDB>:
+MONGO_PASSWORD=<Sua_senha_MongoDB>
+MONGO_URI2=<Final_da_URL_do_seu_Cluster_MongoDB>
 PORT=3000
-MONGO_URI=mongodb+srv://<seu-usuario-mongodb-aqui>:
-MONGO_PASSWORD=<suaSenhaMongoAqui>
-MONGO_URI2=@cluster0.88ueiei.mongodb.net/?retryWrites=true&w=majority
-PRIVATEKEY=<suaPrivateKeyJWT>
+PRIVATEKEY=<Sua_private_keyJWT>
 ```
-
-### ⚠️ Nunca versionar este arquivo no Git.
-
 ---
+## Instalação
 
-### 3. Instalar as dependências
 ```bash
 npm install
 ```
 
----
+## Execução
 
-### 4. Rodar o servidor em modo dev
+### Modo Desenvolvimento
 
 ```bash
 npm run dev
-O servidor será iniciado em: http://localhost:3000
+```
+
+### Modo Produção
+
+```bash
+npm start
 ```
 
 ---
 
-### 🔐 Autenticação JWT
-O login bem-sucedido retorna um token JWT válido.
+## Rotas da API
 
-Esse token deve ser enviado no header das requisições protegidas:
+### Autenticação
+
+- POST /api/register - Registrar novo usuário
+- POST /api/login - Fazer login
+- GET /api/check-email - Verificar disponibilidade de e-mail
+
+### Empresas
+
+- GET /api/companies - Listar todas as empresas
+- POST /api/companies - Criar nova empresa
+- PUT /api/companies/:id - Atualizar empresa
+- DELETE /api/companies/:id - Excluir empresa
+
+### Clientes
+
+- GET /api/customers - Listar todos os clientes
+- POST /api/customers - Criar novo cliente
+- PUT /api/customers/:id - Atualizar cliente
+- DELETE /api/customers/:id - Excluir cliente
+
+### Produtos
+
+- GET /api/products - Listar todos os produtos
+- POST /api/products - Criar novo produto
+- PUT /api/products/:id - Atualizar produto
+- GET /api/products/:id - Obter detalhes de um produto
+- DELETE /api/products/:id - Excluir produto
+
+### Pedidos
+
+- GET /api/orders - Listar todos os pedidos
+- POST /api/orders - Criar novo pedido
+- PUT /api/orders/:id - Atualizar pedido
+- DELETE /api/orders/:id - Excluir pedido
+
+### Itens de Pedido
+
+- POST /api/order-products - Adicionar item a um pedido
+- GET /api/order-products/:orderId - Listar itens de um pedido
+- PUT /api/order-products/:id - Atualizar item de pedido
+- DELETE /api/order-products/delete-by-order/:orderId - Excluir todos os itens de um pedido
+
+---
+
+## Modelos de Dados
+
+### Usuário (User)
 
 ```bash
-Authorization: Bearer <token>
+{
+  name: String,
+  email: { type: String, unique: true },
+  password: String
+}
+```
+
+### Empresa (Company)
+
+```bash
+{
+  tradeName: String,
+  legalName: String,
+  cnpj: { type: String, unique: true },
+  userId: { type: ObjectId, ref: 'User' }
+}
+```
+
+### Cliente (Customer)
+
+```bash
+{
+  name: String,
+  email: String,
+  phone: String,
+  company: { type: ObjectId, ref: 'Company' },
+  userId: { type: ObjectId, ref: 'User' }
+}
+```
+
+### Produto (Product)
+
+```bash
+{
+  name: String,
+  price: Number,
+  description: String,
+  company: { type: ObjectId, ref: 'Company' },
+  userId: { type: ObjectId, ref: 'User' }
+}
+```
+
+### Pedido (Order)
+
+```bash
+{
+  number: String,
+  customer: { type: ObjectId, ref: 'Customer' },
+  company: { type: ObjectId, ref: 'Company' },
+  observation: String,
+  total: Number,
+  date: Date,
+  status: String,
+  userId: { type: ObjectId, ref: 'User' }
+}
+```
+
+### Item de Pedido (OrderProduct)
+
+```bash
+{
+  order: { type: ObjectId, ref: 'Order' },
+  product: { type: ObjectId, ref: 'Product' },
+  quantity: Number
+}
 ```
 
 ---
 
-## 🛣️ Endpoints
+## Middlewares
 
-### POST /api/register
-Cadastra um novo usuário.
+- authMiddleware:
+  - Verifica a validade do token JWT e anexa o usuário autenticado ao objeto de requisição
+- Error Handling:
+  - Middleware centralizado para tratamento de erros
 
-```bash
-{
-  "name": "Seu Nome",
-  "email": "email@exemplo.com",
-  "password": "suasenha"
-}
-```
+---
 
-### POST /api/login
-Autentica um usuário e retorna um token JWT.
+## Testes
+
+Para executar os testes:
 
 ```bash
-{
-  "email": "email@exemplo.com",
-  "password": "suasenha"
-}
-```
-
-
-### GET /api/protected
-Rota protegida, requer o token JWT.
-
-Headers:
-```bash
-Authorization: Bearer <seu_token>
-```
-```bash
-{
-  "message": "Acesso concedido a rota protegida.",
-  "user": {
-    "id": "...",
-    "email": "..."
-  }
-}
+npm test
 ```
 ---
-✍️ Autor
-Desenvolvido por Antonio Carlos – como parte do desafio técnico da Vendergas.
+## Melhorias Futuras
+- Implementar paginação nas listagens
+- Adicionar sistema de permissões de usuário
+- Implementar upload de imagens para produtos
+- Adicionar relatórios e estatísticas
